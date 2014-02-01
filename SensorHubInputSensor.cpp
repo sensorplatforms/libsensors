@@ -78,11 +78,9 @@ int SensorHubInputSensor::enable(int32_t a, int en) {
       			mInputReader = new InputEventCircularReader(4),
 			openInput(Name,getFd());
 			setInitialState();
-			LOGE("HY-DBG: %s:%i Name = %s\n", __func__, __LINE__, Name);
 		} else {
 			openNull();
 			delete mInputReader;
-			LOGE("HY-DBG: %s:%i Name = %s\n", __func__, __LINE__, Name);
 		}
 	} 
 	return 0;
@@ -158,8 +156,6 @@ int SensorHubInputSensor::readEvents(sensors_event_t* data, int count)
 		saved_errno = errno;
 		fcntl(data_fd, F_SETFL, (flags));
 		if (r < 0) {
-			/* Hmmmm */
-			LOGE("HY-DBG: %s:%i (%i) still got a handle despite being disabled??? count = %i, name = %s, mEnabled = %i, errno = %i\n", __func__, __LINE__, tid, count, Name, mEnabled, saved_errno);
 			openNull();
 			mHasPendingEvent = false;
 		}
