@@ -1,0 +1,4 @@
+libsensors
+==========
+
+Android Sensors HAL
