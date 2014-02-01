@@ -3,6 +3,9 @@
 *.lo
 *.o
 
+# emacs backups
+*~
+
 # Compiled Dynamic libraries
 *.so
 *.dylib
