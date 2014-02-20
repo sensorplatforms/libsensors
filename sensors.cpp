@@ -175,10 +175,10 @@ sensors_poll_context_t::sensors_poll_context_t()
     int v;
     int result;
 
-    mSensors[accel] = new SensorHubInputSensor("sensorplatforms-accel", 
-    										   ID_A,  
-    										   SENSOR_TYPE_ACCELEROMETER, 
-    										   .001f, .001f, .001f, 
+    mSensors[accel] = new SensorHubInputSensor(ACCEL_UINPUT_NAME,
+    										   ID_A,
+    										   SENSOR_TYPE_ACCELEROMETER,
+    										   .001f, .001f, .001f,
     										   0, 1, 2);
     mPollFds[accel].fd = mSensors[accel]->getFd();
     mPollFds[accel].events = POLLIN;
@@ -189,10 +189,10 @@ sensors_poll_context_t::sensors_poll_context_t()
    }
 
 
-    mSensors[gyro] = new SensorHubInputSensor("sensorplatforms-gyro", 
+    mSensors[gyro] = new SensorHubInputSensor(GYRO_UINPUT_NAME,
     										  ID_GY,
-    										  SENSOR_TYPE_GYROSCOPE, 
-    										  .001, .001, .001, 
+    										  SENSOR_TYPE_GYROSCOPE,
+    										  .001, .001, .001,
     										  0, 1, 2);
     mPollFds[gyro].fd = mSensors[gyro]->getFd();
     mPollFds[gyro].events = POLLIN;
@@ -202,10 +202,10 @@ sensors_poll_context_t::sensors_poll_context_t()
         sSensorList[gyro].name = strdup(name);
     }
 
-    mSensors[mag] = new SensorHubInputSensor(MAG_UINPUT_NAME, 
-    										 ID_M,  
-    										 SENSOR_TYPE_MAGNETIC_FIELD, 
-    										 .001f, .001f, .001f, 
+    mSensors[mag] = new SensorHubInputSensor(MAG_UINPUT_NAME,
+    										 ID_M,
+    										 SENSOR_TYPE_MAGNETIC_FIELD,
+    										 .001f, .001f, .001f,
     										 0, 1, 2);
     mPollFds[mag].fd = mSensors[mag]->getFd();
     mPollFds[mag].events = POLLIN;

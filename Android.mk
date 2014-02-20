@@ -19,6 +19,7 @@ ifneq ($(TARGET_SIMULATOR),true)
 
 # HAL module implemenation, not prelinked, and stored in
 # hw/<SENSORS_HARDWARE_MODULE_ID>.<ro.product.board>.so
+include $(NVIDIA_DEFAULTS)
 include $(CLEAR_VARS)
 LOCAL_PRELINK_MODULE := false
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
@@ -32,6 +33,6 @@ LOCAL_SRC_FILES := \
 LOCAL_MODULE := sensors.osp
 LOCAL_MODULE_TAGS := debug
 LOCAL_CFLAGS := -DLOG_TAG=\"Sensors\"
-include $(BUILD_SHARED_LIBRARY)
+include $(NVIDIA_SHARED_LIBRARY)
 
 endif # !TARGET_SIMULATOR

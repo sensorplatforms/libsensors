@@ -52,10 +52,10 @@ __BEGIN_DECLS
 /**** SENSOR NAMES corresponding to DRIVERS *****/
 
 /* LibFM Sensors */
-#define ACCEL_UINPUT_NAME       "fm-accelerometer"
-#define GYRO_UINPUT_NAME        "fm-gyroscope"
-#define MAG_UINPUT_NAME         "fm-magnetometer"
-#define SENSOR_LFM_ROT_VECT     "fm-rotation-vector"
+#define ACCEL_UINPUT_NAME       "osp-accelerometer"
+#define GYRO_UINPUT_NAME        "osp-gyroscope"
+#define MAG_UINPUT_NAME         "osp-magnetometer"
+#define SENSOR_LFM_ROT_VECT     "osp-rotation-vector"
 
 /*****************************************************************************/
 
