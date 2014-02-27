@@ -32,7 +32,8 @@ SensorHubInputSensor::SensorHubInputSensor(const char* Name, int32_t sensorId, i
       mInputReader(NULL),
       mHasPendingEvent(false),
       Name(Name),
-      mEnabled(0)
+      mEnabled(0),
+      mIntermediateTimestampNanosecs(0)
 {
 	mPendingEvent.version = sizeof(sensors_event_t);
 	mPendingEvent.sensor = sensorId;
@@ -97,12 +98,6 @@ int SensorHubInputSensor::setDelay(int32_t handle, int64_t delay_ns)
 
 void SensorHubInputSensor::handleEvent(sensors_event_t* handledEvent, input_event const* incomingEvent) 
 {
-    union {
-      uint64_t time64;
-      uint8_t time8[8];
-    }timeInNano;
-    timeInNano.time64= 0;
-
   switch(incomingEvent->code) {
   case ABS_X:
     handledEvent->data[read_x] = (incomingEvent->value*scale_x);
@@ -117,13 +112,11 @@ void SensorHubInputSensor::handleEvent(sensors_event_t* handledEvent, input_even
     break;
 
   case ABS_MISC: 
-    //assumes ABS_MISC always comes first...
-    handledEvent->timestamp= incomingEvent->value;
+      mIntermediateTimestampNanosecs|= (uint64_t)(incomingEvent->value);
     break;
     
   case ABS_MISC+1:
-    //don't clobber the lower bytes
-    handledEvent->timestamp|= ((int64_t)incomingEvent->value) << 32;
+    mIntermediateTimestampNanosecs|= ((uint64_t)incomingEvent->value) << 32;
     break;
 
   default:
@@ -190,7 +183,7 @@ int SensorHubInputSensor::readEvents(sensors_event_t* data, int count)
 
 	if (mHasPendingEvent) {
 		mHasPendingEvent = false;
-		mPendingEvent.timestamp = getTimestamp(); //! \TODO initial events need a sensorhub based (or synced) timestamp
+        mPendingEvent.timestamp = 0; //! \TODO initial events need a sensorhub based (or synced) timestamp, but zero is a decent placeholder
 		*data = mPendingEvent;
 		return mEnabled ? 1 : 0;
 	}
@@ -210,7 +203,9 @@ again:
 			handleEvent(&mPendingEvent, event);
 		} else if (type == EV_SYN) {
 			if (mEnabled) {
-				*data++ = mPendingEvent;
+                mPendingEvent.timestamp= mIntermediateTimestampNanosecs;
+                mIntermediateTimestampNanosecs= 0;
+                *data++ = mPendingEvent;
 				count--;
 				numEventReceived++;
 			}
