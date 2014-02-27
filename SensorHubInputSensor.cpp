@@ -97,16 +97,41 @@ int SensorHubInputSensor::setDelay(int32_t handle, int64_t delay_ns)
 
 void SensorHubInputSensor::handleEvent(sensors_event_t* handledEvent, input_event const* incomingEvent) 
 {
-    if (incomingEvent->code == ABS_X) {
-        handledEvent->data[read_x] = (incomingEvent->value*scale_x);
-    } else if (incomingEvent->code == ABS_Y) {
-        handledEvent->data[read_y] = (incomingEvent->value*scale_y);
-    } else if (incomingEvent->code == ABS_Z) {
-        handledEvent->data[read_z] = (incomingEvent->value*scale_z);
-    }
-    else {
-        ; //ignore unknown codes
-    } 
+    union {
+      uint64_t time64;
+      uint8_t time8[8];
+    }timeInNano;
+    timeInNano.time64= 0;
+
+  switch(incomingEvent->code) {
+  case ABS_X:
+    handledEvent->data[read_x] = (incomingEvent->value*scale_x);
+    break;
+
+  case ABS_Y:
+    handledEvent->data[read_y] = (incomingEvent->value*scale_y);
+    break;
+
+  case ABS_Z:
+    handledEvent->data[read_z] = (incomingEvent->value*scale_z);
+    break;
+
+  case ABS_MISC: 
+    //assumes ABS_MISC always comes first...
+    handledEvent->timestamp= incomingEvent->value;
+    break;
+    
+  case ABS_MISC+1:
+    //don't clobber the lower bytes
+    handledEvent->timestamp|= ((int64_t)incomingEvent->value) << 32;
+    break;
+
+  default:
+    LOGE("unknown input event code %lu", incomingEvent->code);
+    break;
+  }
+
+
 }
 
 void SensorHubOrientationSensor::handleEvent(sensors_event_t* handledEvent, input_event const* incomingEvent)  {
@@ -165,7 +190,7 @@ int SensorHubInputSensor::readEvents(sensors_event_t* data, int count)
 
 	if (mHasPendingEvent) {
 		mHasPendingEvent = false;
-		mPendingEvent.timestamp = getTimestamp();
+		mPendingEvent.timestamp = getTimestamp(); //! \TODO initial events need a sensorhub based (or synced) timestamp
 		*data = mPendingEvent;
 		return mEnabled ? 1 : 0;
 	}
@@ -182,9 +207,8 @@ again:
 		int type = event->type;
 
 		if ((type == EV_REL) || (type == EV_ABS)) {
-            handleEvent(&mPendingEvent, event);
+			handleEvent(&mPendingEvent, event);
 		} else if (type == EV_SYN) {
-			mPendingEvent.timestamp = timevalToNano(event->time);
 			if (mEnabled) {
 				*data++ = mPendingEvent;
 				count--;
