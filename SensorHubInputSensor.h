@@ -56,7 +56,6 @@ private:
 	int input_sysfs_path_len;
 	const char *Name;
 	int mEnabled;
-    uint64_t mIntermediateTimestampNanosecs;
 
 	float scale_x;
 	float scale_y;
