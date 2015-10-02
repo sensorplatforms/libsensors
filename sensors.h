@@ -48,14 +48,21 @@ __BEGIN_DECLS
 #define ID_RV       (10)
 #define ID_LINACC   (11)
 #define ID_GRAV     (12)
+#define ID_UNCALIBRATED_MAG    (13)
+#define ID_GAME_ROT_VEC        (14)
+#define ID_UNCALIBRATED_GYRO   (15)
+#define ID_SIG_MOTION          (16)
+#define ID_STEP_DETECTOR       (17)
+#define ID_STEP_COUNTER        (18)
+#define ID_GEOMAGNETIC_ROT_VEC (19)
 
 /**** SENSOR NAMES corresponding to DRIVERS *****/
 
 /* LibFM Sensors */
-#define ACCEL_UINPUT_NAME       "osp-accelerometer"
-#define GYRO_UINPUT_NAME        "osp-gyroscope"
-#define MAG_UINPUT_NAME         "osp-magnetometer"
-#define SENSOR_LFM_ROT_VECT     "osp-rotation-vector"
+#define ACCEL_UINPUT_NAME       "fm-accelerometer"
+#define GYRO_UINPUT_NAME        "fm-gyroscope"
+#define MAG_UINPUT_NAME         "fm-magnetometer"
+#define SENSOR_LFM_ROT_VECT     "fm-rotation-vector"
 
 /*****************************************************************************/
 

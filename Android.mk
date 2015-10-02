@@ -19,20 +19,19 @@ ifneq ($(TARGET_SIMULATOR),true)
 
 # HAL module implemenation, not prelinked, and stored in
 # hw/<SENSORS_HARDWARE_MODULE_ID>.<ro.product.board>.so
-include $(NVIDIA_DEFAULTS)
 include $(CLEAR_VARS)
 LOCAL_PRELINK_MODULE := false
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
 LOCAL_SHARED_LIBRARIES := liblog libcutils libdl
 LOCAL_SRC_FILES := \
-                sensors.cpp 			\
-                SensorBase.cpp			\
-                SensorHubInputSensor.cpp	\
-                InputEventReader.cpp
+		sensors.cpp 			\
+		SensorBase.cpp			\
+		OSPInputSensor.cpp		\
+		InputEventReader.cpp
 
 LOCAL_MODULE := sensors.osp
 LOCAL_MODULE_TAGS := debug
 LOCAL_CFLAGS := -DLOG_TAG=\"Sensors\"
-include $(NVIDIA_SHARED_LIBRARY)
+include $(BUILD_SHARED_LIBRARY)
 
 endif # !TARGET_SIMULATOR

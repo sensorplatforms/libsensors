@@ -83,6 +83,9 @@ int SensorBase::getFd() const {
     }
     return data_fd;
 }
+const char * SensorBase::getDevName() const {
+    return input_name;
+}
 
 int SensorBase::setDelay(int32_t handle, int64_t ns) {
     return 0;
@@ -179,6 +182,7 @@ int SensorBase::openInput(const char* inputName) {
     DIR *dir;
     struct dirent *de;
 
+    input_name[0] = '\0';
     dir = opendir(dirname);
     if(dir == NULL)
         return -1;

@@ -31,7 +31,7 @@
 
 #include "sensors.h"
 
-#include "SensorHubInputSensor.h"
+#include "OSPInputSensor.h"
 
 /*****************************************************************************/
 
@@ -52,6 +52,13 @@
 #define SENSORS_ROTATION                (1<<ID_RV)
 #define SENSORS_LINEAR_ACCELERATION     (1<<ID_LINACC)
 #define SENSORS_GRAVITY                 (1<<ID_GRAV)
+#define SENSORS_UNCALIBRATED_MAG        (1<<ID_UNCALIBRATED_MAG)
+#define SENSORS_GAME_ROT_VEC            (1<<ID_GAME_ROT_VEC)
+#define SENSORS_UNCALIBRATED_GYRO       (1<<ID_UNCALIBRATED_GYRO)
+#define SENSORS_SIG_MOTION              (1<<ID_SIG_MOTION)
+#define SENSORS_STEP_DETECTOR           (1<<ID_STEP_DETECTOR)
+#define SENSORS_STEP_COUNTER            (1<<ID_STEP_COUNTER)
+#define SENSORS_GEOMAGNETIC_ROT_VEC     (1<<ID_GEOMAGNETIC_ROT_VEC)
 
 #define SENSORS_ACCELERATION_HANDLE     0
 #define SENSORS_MAGNETIC_FIELD_HANDLE   1
@@ -67,6 +74,16 @@
 #define SENSORS_LIN_ACCELERATION_HANDLE 11
 #define SENSORS_GRAVITY_HANDLE          12
 
+#define SENSORS_UNCALIBRATED_MAG_HANDLE       13
+#define SENSORS_GAME_ROT_VEC_HANDLE           14
+#define SENSORS_UNCALIBRATED_GYRO_HANDLE      15
+#define SENSORS_SIG_MOTION_HANDLE             16
+#define SENSORS_STEP_DETECTOR_HANDLE          17
+#define SENSORS_STEP_COUNTER_HANDLE           18
+#define SENSORS_GEOMAGNETIC_ROT_VEC_HANDLE    19
+
+
+//For android:
 #ifndef UNIX_PATH_MAX
 # define UNIX_PATH_MAX 108
 #endif
@@ -84,12 +101,55 @@ static struct sensor_t sSensorList[] = {
       "Sensor Platforms",
       1, SENSORS_GYROSCOPE_HANDLE,
       SENSOR_TYPE_GYROSCOPE, RANGE_GYRO, RESOLUTION_GYRO, 6.5f, 20000, 0, 0, { } },
-    { "OSP Magnetometer",
+    { "OSP magnetometer",
       "Sensor Platforms",
       1, SENSORS_MAGNETIC_FIELD_HANDLE,
       SENSOR_TYPE_MAGNETIC_FIELD, RANGE_M, RESOLUTION_M, .6f, 20000, 0, 0, { } },
+    { "OSP Orientation",
+      "Sensor Platform",
+      1, SENSORS_ORIENTATION_HANDLE,
+      SENSOR_TYPE_ORIENTATION, 360.0f, 0.00001f, 7.35f, 20000, 0, 0, { } },
+    { "OSP Rotation sensor",
+      "Sensor Platforms",
+      1, SENSORS_ROTATION_VECTOR_HANDLE,
+      SENSOR_TYPE_ROTATION_VECTOR, 1.0f, 0.000000001f, 7.35f, 20000, 0, 0, { } },
+    { "OSP Linear Acceleration sensor",
+      "Sensor Platforms",
+      1, SENSORS_LIN_ACCELERATION_HANDLE,
+      SENSOR_TYPE_LINEAR_ACCELERATION, RANGE_A, 0.00001f, 7.35f, 20000, 0, 0, { } },
+    { "OSP Gravity sensor",
+      "Sensor Platforms",
+      1, SENSORS_GRAVITY_HANDLE,
+      SENSOR_TYPE_GRAVITY, RANGE_A, 0.00001f, 7.35f, 20000, 0, 0, { } },
+    { "OSP Uncalibrated Magnetometer",
+      "Sensor Platforms",
+      1, SENSORS_UNCALIBRATED_MAG_HANDLE,
+      SENSOR_TYPE_MAGNETIC_FIELD_UNCALIBRATED, RANGE_M, RESOLUTION_M, .6f, 20000, 0, 0, { } },
+    { "OSP Game Rot Vec",
+      "Sensor Platforms",
+      1, SENSORS_GAME_ROT_VEC_HANDLE,
+      SENSOR_TYPE_GAME_ROTATION_VECTOR,  1.0f, 0.000000001f, 7.35f, 20000, 0, 0, { } },
+    { "OSP Uncalibrated Gyroscope",
+      "Sensor Platforms",
+      1, SENSORS_UNCALIBRATED_GYRO_HANDLE,
+      SENSOR_TYPE_GYROSCOPE_UNCALIBRATED, RANGE_GYRO, RESOLUTION_GYRO, 6.5f, 20000, 0, 0, { } },
+    { "OSP Significant Motion",
+      "Sensor Platforms",
+       1, SENSORS_SIG_MOTION_HANDLE,
+       SENSOR_TYPE_SIGNIFICANT_MOTION, 1.0f, 1.0f, 1.1f, 0, 0, 0, {}},
+    { "OSP Step Detector",
+      "Sensor Platforms",
+      1, SENSORS_STEP_DETECTOR_HANDLE,
+      SENSOR_TYPE_STEP_DETECTOR, 1.0f, 1.0f, 1.1f, 0, 0, 0, {}},
+    { "OSP Step Counter",
+      "Sensor Platforms",
+      1, SENSORS_STEP_COUNTER_HANDLE,
+      SENSOR_TYPE_STEP_COUNTER, 1000.0f, 1.0f, 1.1f, 0, 0, 0, {}},
+    { "OSP Geomagnetic Rot Vec",
+      "Sensor Platforms",
+      1, SENSORS_GEOMAGNETIC_ROT_VEC_HANDLE,
+      SENSOR_TYPE_GEOMAGNETIC_ROTATION_VECTOR,  1.0f, 0.000000001f, 7.35f, 20000, 0, 0, { } },
 };
-
 
 static int open_sensors(const struct hw_module_t* module, const char* id,
                         struct hw_device_t** device);
@@ -137,6 +197,17 @@ private:
         accel,
         gyro,
         mag,
+        orientation,
+        rot_vec,
+        linear_accel,
+        gravity,
+        uncal_mag,
+        game_rot_vec,
+        uncal_gyro,
+        sig_motion,
+        step_detector,
+        step_counter,
+        geo_rot_vec,
         numSensorDrivers,
         numFds,
     };
@@ -160,9 +231,41 @@ private:
 
         case ID_M:
             return mag;
+        case ID_O:
+            return orientation;
 
         case ID_GY:
             return gyro;
+
+        case ID_RV:
+            return rot_vec;
+
+        case ID_LINACC:
+            return linear_accel;
+
+        case ID_GRAV:
+            return gravity;
+
+        case ID_UNCALIBRATED_MAG:
+            return uncal_mag;
+
+        case ID_GAME_ROT_VEC:
+            return game_rot_vec;
+
+        case ID_SIG_MOTION:
+            return sig_motion;
+
+        case ID_UNCALIBRATED_GYRO:
+            return uncal_gyro;
+
+        case ID_STEP_DETECTOR:
+            return step_detector;
+
+        case ID_STEP_COUNTER:
+            return step_counter;
+
+        case ID_GEOMAGNETIC_ROT_VEC:
+            return geo_rot_vec;
 
         }
         return -EINVAL;
@@ -175,11 +278,7 @@ sensors_poll_context_t::sensors_poll_context_t()
     int v;
     int result;
 
-    mSensors[accel] = new SensorHubInputSensor(ACCEL_UINPUT_NAME,
-    										   ID_A,
-    										   SENSOR_TYPE_ACCELEROMETER,
-    										   .001f, .001f, .001f,
-    										   0, 1, 2);
+    mSensors[accel] = new OSPInputSensor(ACCEL_UINPUT_NAME, ID_A,  SENSOR_TYPE_ACCELEROMETER, true);
     mPollFds[accel].fd = mSensors[accel]->getFd();
     mPollFds[accel].events = POLLIN;
     mPollFds[accel].revents = 0;
@@ -189,11 +288,7 @@ sensors_poll_context_t::sensors_poll_context_t()
    }
 
 
-    mSensors[gyro] = new SensorHubInputSensor(GYRO_UINPUT_NAME,
-    										  ID_GY,
-    										  SENSOR_TYPE_GYROSCOPE,
-    										  .001, .001, .001,
-    										  0, 1, 2);
+    mSensors[gyro] = new OSPInputSensor(GYRO_UINPUT_NAME, ID_GY,  SENSOR_TYPE_GYROSCOPE, true);
     mPollFds[gyro].fd = mSensors[gyro]->getFd();
     mPollFds[gyro].events = POLLIN;
     mPollFds[gyro].revents = 0;
@@ -202,16 +297,123 @@ sensors_poll_context_t::sensors_poll_context_t()
         sSensorList[gyro].name = strdup(name);
     }
 
-    mSensors[mag] = new SensorHubInputSensor(MAG_UINPUT_NAME,
-    										 ID_M,
-    										 SENSOR_TYPE_MAGNETIC_FIELD,
-    										 .001f, .001f, .001f,
-    										 0, 1, 2);
+    mSensors[mag] = new OSPInputSensor(MAG_UINPUT_NAME, ID_M,  SENSOR_TYPE_MAGNETIC_FIELD, true);
     mPollFds[mag].fd = mSensors[mag]->getFd();
     mPollFds[mag].events = POLLIN;
     mPollFds[mag].revents = 0;
     if (ioctl(mPollFds[mag].fd,EVIOCGPHYS(sizeof(name)),name) >= 0) {
         sSensorList[mag].name = strdup(name);
+    }
+
+    mSensors[rot_vec] = new OSPInputSensor("fm-rotation-vector", ID_RV,  SENSOR_TYPE_ROTATION_VECTOR, true);
+    mPollFds[rot_vec].fd = mSensors[rot_vec]->getFd();
+    mPollFds[rot_vec].events = POLLIN;
+    mPollFds[rot_vec].revents = 0;
+    if (ioctl(mPollFds[rot_vec].fd,EVIOCGPHYS(sizeof(name)),name) >= 0) {
+        sSensorList[rot_vec].name = strdup(name);
+    }
+
+    mSensors[orientation] = new OSPInputSensor("fm-compass-orientation", ID_O,  SENSOR_TYPE_ORIENTATION, true);
+    mPollFds[orientation].fd = mSensors[orientation]->getFd();
+    mPollFds[orientation].events = POLLIN;
+    mPollFds[orientation].revents = 0;
+    if (ioctl(mPollFds[orientation].fd,EVIOCGPHYS(sizeof(name)),name) >= 0) {
+        sSensorList[orientation].name = strdup(name);
+    }
+
+    mSensors[linear_accel] = new OSPInputSensor("fm-linear-acceleration", ID_LINACC,
+                                                        SENSOR_TYPE_LINEAR_ACCELERATION, true);
+    mPollFds[linear_accel].fd = mSensors[linear_accel]->getFd();
+    mPollFds[linear_accel].events = POLLIN;
+    mPollFds[linear_accel].revents = 0;
+    if (ioctl(mPollFds[linear_accel].fd,EVIOCGPHYS(sizeof(name)),name) >= 0) {
+        sSensorList[linear_accel].name = strdup(name);
+    }
+
+    mSensors[gravity] = new OSPInputSensor("fm-gravity", ID_GRAV, SENSOR_TYPE_GRAVITY, true);
+    mPollFds[gravity].fd = mSensors[gravity]->getFd();
+    mPollFds[gravity].events = POLLIN;
+    mPollFds[gravity].revents = 0;
+    if (ioctl(mPollFds[gravity].fd,EVIOCGPHYS(sizeof(name)),name) >= 0) {
+        sSensorList[gravity].name = strdup(name);
+    }
+
+    mSensors[uncal_mag] = new OSPInputSensor("fm-uncalibrated-magnetometer",
+                            ID_UNCALIBRATED_MAG,
+                            SENSOR_TYPE_MAGNETIC_FIELD_UNCALIBRATED,
+                            true);
+    mPollFds[uncal_mag].fd = mSensors[uncal_mag]->getFd();
+    mPollFds[uncal_mag].events = POLLIN;
+    mPollFds[uncal_mag].revents = 0;
+    if (ioctl(mPollFds[uncal_mag].fd,EVIOCGPHYS(sizeof(name)),name) >= 0) {
+        sSensorList[uncal_mag].name = strdup(name);
+    }
+
+     mSensors[game_rot_vec] = new OSPInputSensor("fm-game-rotation-vector", 
+				 			ID_GAME_ROT_VEC, 
+				 			SENSOR_TYPE_GAME_ROTATION_VECTOR, 
+				 			true);
+     mPollFds[game_rot_vec].fd = mSensors[game_rot_vec]->getFd();
+     mPollFds[game_rot_vec].events = POLLIN;
+     mPollFds[game_rot_vec].revents = 0;
+     if (ioctl(mPollFds[game_rot_vec].fd,EVIOCGPHYS(sizeof(name)),name) >= 0) {
+         sSensorList[game_rot_vec].name = strdup(name);
+     }
+
+    mSensors[uncal_gyro] = new OSPInputSensor("fm-uncalibrated-gyroscope", 
+							ID_UNCALIBRATED_GYRO, 
+							SENSOR_TYPE_GYROSCOPE_UNCALIBRATED, 
+							true);
+    mPollFds[uncal_gyro].fd = mSensors[uncal_gyro]->getFd();
+    mPollFds[uncal_gyro].events = POLLIN;
+    mPollFds[uncal_gyro].revents = 0;
+    if (ioctl(mPollFds[uncal_gyro].fd,EVIOCGPHYS(sizeof(name)),name) >= 0) {
+        sSensorList[uncal_gyro].name = strdup(name);
+    }
+
+    mSensors[sig_motion] = new OSPInputSensor("fm-significant-motion",
+                                               ID_SIG_MOTION,
+                                               SENSOR_TYPE_SIGNIFICANT_MOTION,
+					       FM_DECODE_VALUE_AS_INTEGER);
+    mPollFds[sig_motion].fd = mSensors[sig_motion]->getFd();
+    mPollFds[sig_motion].events = POLLIN;
+    mPollFds[sig_motion].revents = 0;
+    if (ioctl(mPollFds[sig_motion].fd,EVIOCGPHYS(sizeof(name)),name) >= 0) {
+        sSensorList[sig_motion].name = strdup(name);
+    }
+
+    mSensors[step_detector] = new OSPInputSensor("fm-step-detector", 
+							 ID_STEP_DETECTOR, 
+							 SENSOR_TYPE_STEP_DETECTOR, 
+							 FM_DECODE_VALUE_AS_INTEGER);
+
+     mPollFds[step_detector].fd = mSensors[step_detector]->getFd();
+     mPollFds[step_detector].events = POLLIN;
+     mPollFds[step_detector].revents = 0;
+     if (ioctl(mPollFds[step_detector].fd,EVIOCGPHYS(sizeof(name)),name) >= 0) {
+         sSensorList[step_detector].name = strdup(name);
+     }
+
+    mSensors[step_counter] = new OSPStepCounter("fm-step-counter", 
+						       ID_STEP_COUNTER, 
+						       SENSOR_TYPE_STEP_COUNTER, 
+						       FM_DECODE_VALUE_AS_INTEGER);
+    mPollFds[step_counter].fd = mSensors[step_counter]->getFd();
+    mPollFds[step_counter].events = POLLIN;
+    mPollFds[step_counter].revents = 0;
+    if (ioctl(mPollFds[step_counter].fd,EVIOCGPHYS(sizeof(name)),name) >= 0) {
+        sSensorList[step_counter].name = strdup(name);
+    }
+
+    mSensors[geo_rot_vec] = new OSPInputSensor("fm-geomagnetic-rotation-vector", 
+							ID_GEOMAGNETIC_ROT_VEC, 
+							SENSOR_TYPE_GEOMAGNETIC_ROTATION_VECTOR, 
+							true);
+    mPollFds[geo_rot_vec].fd = mSensors[geo_rot_vec]->getFd();
+    mPollFds[geo_rot_vec].events = POLLIN;
+    mPollFds[geo_rot_vec].revents = 0;
+    if (ioctl(mPollFds[geo_rot_vec].fd,EVIOCGPHYS(sizeof(name)),name) >= 0) {
+        sSensorList[geo_rot_vec].name = strdup(name);
     }
 
     int wakeFds[2];

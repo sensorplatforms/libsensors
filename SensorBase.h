@@ -42,6 +42,7 @@ protected:
     int openNull();
     static int64_t getTimestamp();
 
+    virtual bool handleEvent(input_event const * event, sensors_event_t* androidData) {return false;}
 
     static int64_t timevalToNano(timeval const& t) {
         return t.tv_sec*1000000000LL + t.tv_usec*1000;
@@ -62,6 +63,7 @@ public:
     virtual int readEvents(sensors_event_t* data, int count) = 0;
     virtual bool hasPendingEvents() const;
     virtual int getFd() const;
+    virtual const char * getDevName() const;
     virtual int setDelay(int32_t handle, int64_t ns);
     virtual int enable(int32_t handle, int enabled) = 0;
     virtual int batch(int handle, int flags, int64_t period_ns, int64_t timeout);
